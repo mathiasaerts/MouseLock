@@ -1,5 +1,5 @@
 ﻿using System.Windows.Forms;
-namespace LockMouseGUI
+namespace MouseLock
 {
     partial class UI
     {
@@ -126,7 +126,7 @@ namespace LockMouseGUI
         }
 
         #endregion
-        
+
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button addProgramButton;
         private System.Windows.Forms.NotifyIcon notifyIcon;

@@ -13,7 +13,7 @@ using System.IO;
 using Shell32;
 
 
-namespace LockMouseGUI
+namespace MouseLock
 {
     class Worker
     {
@@ -63,10 +63,11 @@ namespace LockMouseGUI
                 catch
                 {
                     MessageBox.Show(
-                    "Mouse Lock was unable to write the program list. Please make sure the " + filePath + " file is not read-only. The program will now exit.",
-                    "Unable to write to file",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Stop);
+                        "Mouse Lock was unable to write the program list. Please make sure the " + filePath + " file is not read-only. The program will now exit.",
+                        "Unable to write to file",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Stop
+                    );
                 }
             }
 
@@ -76,7 +77,7 @@ namespace LockMouseGUI
             // Add each line to the list
             foreach (string line in lines)
             {
-                processList.Add(line);
+                addProcess(line);
             }
 
             // Allow running worker
@@ -99,20 +100,28 @@ namespace LockMouseGUI
         {
             // If shortcut, get target exe
             if (newProcess.EndsWith(".lnk"))
+            {
                 newProcess = Worker.GetShortcutTargetFile(newProcess);
+                if (String.IsNullOrEmpty(newProcess))
+                    return;
+            }
             // Add if ends with .exe
             if (newProcess.EndsWith(".exe"))
             {
-                if (inList(newProcess, processList))
+                if (Util.inList(newProcess, processList))
                 {
                     MessageBox.Show(
-                    "The selected executable is already on the list.",
-                    "Already in list",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                        "The selected executable is already on the list:\n" + 
+                        newProcess.Truncate(50),
+                        "Duplicate executable selected",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
                 }
                 else
+                {
                     processList.Add(newProcess);
+                }
             }
             else
             {
@@ -120,7 +129,8 @@ namespace LockMouseGUI
                     "Only executables can be added to the list.",
                     "Invalid executable",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    MessageBoxIcon.Information
+                );
             }
             updateFile();
         }
@@ -169,7 +179,8 @@ namespace LockMouseGUI
                     "Mouse Lock was unable to write the program list. Please make sure the " + filePath + " file is not read-only.",
                     "Unable to write to file",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    MessageBoxIcon.Exclamation
+                );
             }
         }
 
@@ -188,25 +199,31 @@ namespace LockMouseGUI
 
             if (folderItem != null)
             {
-                // Get shortcut target
-                ShellLinkObject link = (ShellLinkObject) folderItem.GetLink;
-                return link.Path;
+                try
+                {
+                    // Get shortcut target
+                    var link = (ShellLinkObject)folderItem.GetLink;
+                    if(link != null)
+                        return link.Path;
+                }
+                catch
+                {
+                    MessageBox.Show("Failed to get target file for this shortcut. " +
+                        "This may be due to a permission error. " +
+                        "Make sure the current user can access the shortcut location." +
+                        "\n\n" +
+                        "This occurs for shortcuts on the Windows Public Desktop, " +
+                        "try adding the executable directly instead.",
+                        "Unable to get shortcut target",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+                
             }
 
             // Not found, return empty string
             return "";
-        }
-
-        public static bool inList(string checkString, List<string> list)
-        {
-            // To lowercase
-            checkString = checkString.ToLower();
-            foreach (string item in list)
-            {
-                if (checkString.Equals(item.ToLower()))
-                    return true;
-            }
-            return false;
         }
 
         public static string GetActiveProcessFileName()
@@ -246,7 +263,7 @@ namespace LockMouseGUI
                     //Console.WriteLine(currentProcess);
 
                     // If current process changed and is in our list
-                    if (alwaysLock || (!currentProcess.Equals(lastProcess) && inList(currentProcess, processList)))
+                    if (alwaysLock || (!currentProcess.Equals(lastProcess) && Util.inList(currentProcess, processList)))
                     {
                         // Get screen resolution and set size
                         Cursor.Clip = Screen.PrimaryScreen.Bounds;

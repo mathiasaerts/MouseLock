@@ -1,4 +1,4 @@
-﻿namespace LockMouseGUI
+﻿namespace MouseLock
 {
     partial class manageProgramsForm
     {

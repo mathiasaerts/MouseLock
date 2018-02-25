@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace LockMouseGUI
+namespace MouseLock
 {
     public partial class UI : Form
     {
@@ -101,7 +101,8 @@ namespace LockMouseGUI
                 DialogResult res = MessageBox.Show(this,
                     "Are you sure you want to close MouseLock?",
                     "Closing MouseLock",
-                    MessageBoxButtons.YesNo);
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Information);
 
                 // If NO - cancel close
                 if (res == DialogResult.No)
@@ -195,7 +196,17 @@ namespace LockMouseGUI
         private void radioAlways_CheckedChanged(object sender, EventArgs e)
         {
             if(radioAlways.Checked)
+            {
+                // Enable locking
                 Worker.enableAlwaysLock();
+
+                // Move main window to primary screen
+                Point primaryCenter = new Point(
+                    (Screen.PrimaryScreen.Bounds.Width / 2) - this.Width / 2, 
+                    (Screen.PrimaryScreen.Bounds.Height / 2) - this.Height / 2
+                );
+                this.Location = primaryCenter;
+            }
         }
     }
 }

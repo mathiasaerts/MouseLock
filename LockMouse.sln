@@ -1,9 +1,9 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.6
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseLock", "LockMouseGUI\MouseLock.csproj", "{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}"
-EndProject
-Project("{6141683F-8A12-4E36-9623-2EB02B2C2303}") = "InstallShield Setup", "Setup\InstallShield Setup.isproj", "{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +23,7 @@ Global
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.CD_ROM|x86.ActiveCfg = Release|x86
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.CD_ROM|x86.Build.0 = Release|x86
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.Debug|x64.ActiveCfg = Debug|x86
+		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.Debug|x64.Build.0 = Debug|x86
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.Debug|x86.ActiveCfg = Debug|x86
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.Debug|x86.Build.0 = Debug|x86
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.DVD-5|x64.ActiveCfg = Debug|x86
@@ -35,26 +36,6 @@ Global
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.SingleImage|x64.ActiveCfg = Release|x86
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.SingleImage|x86.ActiveCfg = Release|x86
 		{EDC8DBA1-B659-4287-90CE-CF3F28F4711A}.SingleImage|x86.Build.0 = Release|x86
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.CD_ROM|x64.ActiveCfg = CD_ROM
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.CD_ROM|x64.Build.0 = CD_ROM
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.CD_ROM|x86.ActiveCfg = CD_ROM
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.CD_ROM|x86.Build.0 = CD_ROM
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.Debug|x64.ActiveCfg = DVD-5
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.Debug|x64.Build.0 = DVD-5
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.Debug|x86.ActiveCfg = DVD-5
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.Debug|x86.Build.0 = DVD-5
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.DVD-5|x64.ActiveCfg = DVD-5
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.DVD-5|x64.Build.0 = DVD-5
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.DVD-5|x86.ActiveCfg = DVD-5
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.DVD-5|x86.Build.0 = DVD-5
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.Release|x64.ActiveCfg = SingleImage
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.Release|x64.Build.0 = SingleImage
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.Release|x86.ActiveCfg = SingleImage
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.Release|x86.Build.0 = SingleImage
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.SingleImage|x64.ActiveCfg = SingleImage
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.SingleImage|x64.Build.0 = SingleImage
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.SingleImage|x86.ActiveCfg = SingleImage
-		{11D42188-D74C-47C7-BCE0-D9A01A37CBBA}.SingleImage|x86.Build.0 = SingleImage
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

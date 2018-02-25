@@ -4,7 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Threading;
 
-namespace LockMouseGUI
+namespace MouseLock
 {
     static class MouseLock
     {
