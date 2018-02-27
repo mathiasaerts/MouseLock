@@ -12,6 +12,8 @@ using System.Windows.Forms;
 using System.IO;
 using Shell32;
 
+using Microsoft.Win32;
+using System.Windows.Automation;
 
 namespace MouseLock
 {
@@ -20,32 +22,14 @@ namespace MouseLock
         private static readonly string fileLocation = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\MouseLock\\";
         private static readonly string filePath = fileLocation + "programs.txt";
 
+        private static bool alwaysLock = false;
         private static string lastProcess = "";
         private static string currentProcess = "";
         private static List<string> processList;
 
-        private static bool allowRun = false;
-        private static bool alwaysLock = false;
-
-        [DllImport("user32.dll")]
-        public static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out uint ProcessId);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-
-        /* Add console for debugging
-        [DllImport("kernel32.dll")]
-        static extern bool AttachConsole(int dwProcessId);
-        private const int ATTACH_PARENT_PROCESS = -1;
-         * */
-
         public Worker()
         {
-            /*
-            // Redirect console output to parent process
-            AttachConsole(ATTACH_PARENT_PROCESS);
-             * */
-
+            // Initialize processlist
             processList = new List<string>();
 
             // Check if file exists
@@ -76,12 +60,17 @@ namespace MouseLock
 
             // Add each line to the list
             foreach (string line in lines)
-            {
-                addProcess(line);
-            }
+                addProcess(line, false);
 
-            // Allow running worker
-            allowRun = true;
+            // Update file once after all processes have been added
+            updateFile();
+
+            // Listen to events
+            SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+            Automation.AddAutomationFocusChangedEventHandler(OnFocusChangedHandler);
+
+            // Update lock
+            updateLock();
         }
 
         #region Getters, setters and other methods for processList
@@ -96,7 +85,7 @@ namespace MouseLock
             processList = newList;
         }
 
-        public static void addProcess(string newProcess)
+        public static void addProcess(string newProcess, bool doFileUpdate = true)
         {
             // If shortcut, get target exe
             if (newProcess.EndsWith(".lnk"))
@@ -132,7 +121,9 @@ namespace MouseLock
                     MessageBoxIcon.Information
                 );
             }
-            updateFile();
+
+            if (doFileUpdate) 
+                updateFile();
         }
 
         public static void delProcess(string procName)
@@ -147,24 +138,11 @@ namespace MouseLock
             updateFile();
         }
 
-        public static void enableAlwaysLock()
+        public static void setAlwaysLock(bool value)
         {
             // Enable always lock
-            alwaysLock = true;
-            // Reset last process to force update on lock
-            lastProcess = "";
-        }
-
-        public static void disableAlwaysLock()
-        {
-            // Disable always lock
-            alwaysLock = false;
-
-            // Disable current lock
-            Cursor.Clip = Rectangle.Empty;
-
-            // Reset last process to force update on lock
-            lastProcess = "";
+            alwaysLock = value;
+            updateLock();
         }
 
         public static void updateFile()
@@ -226,63 +204,57 @@ namespace MouseLock
             return "";
         }
 
-        public static string GetActiveProcessFileName()
+        public static void updateLock()
         {
+
+            Rectangle bounds = Rectangle.Empty;
+            if (alwaysLock || Util.inList(currentProcess, processList))
+            {
+                bounds = Screen.PrimaryScreen.Bounds;
+            }
+            //Console.WriteLine("Updating lock: {0}, {1} - Bounds: {2}", alwaysLock, currentProcess, bounds);
+
+            Cursor.Clip = bounds;
+        }
+
+        private static void SystemEvents_DisplaySettingsChanged(object sender, EventArgs e)
+        {
+            //Console.WriteLine("Resolution Changed!");
+            updateLock();
+        }
+
+        private static void OnFocusChangedHandler(object src, AutomationFocusChangedEventArgs args)
+        {
+            // Reset current process
+            currentProcess = "";
+
+            //Console.WriteLine("Focus changed! ");
+            AutomationElement element = src as AutomationElement;
+
             try
             {
-                uint pid;
-                string retVal;
+                if (element != null)
+                {
+                    string name = element.Current.Name;
+                    string id = element.Current.AutomationId;
+                    int processId = element.Current.ProcessId;
+                    using (Process process = Process.GetProcessById(processId))
+                    {
+                        currentProcess = process.MainModule.FileName;
+                        //Console.WriteLine("Name: {0}, Id: {1}, Process: {2}", name, id, currentProcess);
 
-                // Get foreground window handle
-                IntPtr hwnd = GetForegroundWindow();
-                // Get Process ID
-                GetWindowThreadProcessId(hwnd, out pid);
+                        if (currentProcess != lastProcess)
+                            updateLock();
 
-                // Get process from PID
-                Process p = Process.GetProcessById((int) pid);
-                retVal = p.MainModule.FileName;
-                p.Close();
-                return retVal;
+                        lastProcess = currentProcess;
+                    }
+                }
             }
             catch
             {
-                return "Error/x64";
+                // Update lock, just to be sure ;)
+                updateLock();
             }
-        }
-
-        public void run()
-        {
-            ThreadStart updateCurrentProcess = delegate
-            {
-                while (allowRun)
-                {
-                    // Get active process
-                    currentProcess = GetActiveProcessFileName();
-
-                    // Debug output
-                    //Console.WriteLine(currentProcess);
-
-                    // If current process changed and is in our list
-                    if (alwaysLock || (!currentProcess.Equals(lastProcess) && Util.inList(currentProcess, processList)))
-                    {
-                        // Get screen resolution and set size
-                        Cursor.Clip = Screen.PrimaryScreen.Bounds;
-                    }
-                    // Update last process
-                    lastProcess = currentProcess;
-
-                    Thread.Sleep(500);
-                }
-
-            };
-            Thread t1 = new Thread(updateCurrentProcess);
-            t1.IsBackground = true;
-            t1.Start();
-        }
-
-        public static void stop()
-        {
-            allowRun = false;
         }
     }
 }

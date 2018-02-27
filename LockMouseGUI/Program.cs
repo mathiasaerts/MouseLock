@@ -27,9 +27,8 @@ namespace MouseLock
                 return;
             }
 
-            // Create and start worker thread
+            // Create worker
             Worker worker = new Worker();
-            worker.run();
 
             // Default form action
             Application.EnableVisualStyles();

@@ -111,9 +111,6 @@ namespace MouseLock
                     return;
                 }
             }
-
-            // Stop worker thread/loop
-            Worker.stop();
         }
 
         private void progForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -190,7 +187,7 @@ namespace MouseLock
         private void radioPrograms_CheckedChanged(object sender, EventArgs e)
         {
             if(radioPrograms.Checked)
-                Worker.disableAlwaysLock();
+                Worker.setAlwaysLock(false);
         }
 
         private void radioAlways_CheckedChanged(object sender, EventArgs e)
@@ -198,7 +195,7 @@ namespace MouseLock
             if(radioAlways.Checked)
             {
                 // Enable locking
-                Worker.enableAlwaysLock();
+                Worker.setAlwaysLock(true);
 
                 // Move main window to primary screen
                 Point primaryCenter = new Point(
