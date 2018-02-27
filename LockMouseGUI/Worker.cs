@@ -242,15 +242,10 @@ namespace MouseLock
                     {
                         currentProcess = process.MainModule.FileName;
                         //Console.WriteLine("Name: {0}, Id: {1}, Process: {2}", name, id, currentProcess);
-
-                        if (currentProcess != lastProcess)
-                            updateLock();
-
-                        lastProcess = currentProcess;
                     }
                 }
             }
-            catch
+            finally
             {
                 // Update lock, just to be sure ;)
                 updateLock();
