@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace LockMouseGUI
+namespace MouseLock
 {
     public partial class manageProgramsForm : Form
     {
@@ -64,10 +64,10 @@ namespace LockMouseGUI
 
             foreach (string file in files)
             {
-                Worker.addProcess(file);
-
                 // Debug output
-                // Console.WriteLine("Added file:" + fileTarget);
+                Console.WriteLine("Adding file:" + file);
+
+                Worker.addProcess(file);
             }
 
             updateList();

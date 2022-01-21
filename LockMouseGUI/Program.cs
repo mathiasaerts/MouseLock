@@ -4,7 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Threading;
 
-namespace LockMouseGUI
+namespace MouseLock
 {
     static class MouseLock
     {
@@ -27,9 +27,8 @@ namespace LockMouseGUI
                 return;
             }
 
-            // Create and start worker thread
+            // Create worker
             Worker worker = new Worker();
-            worker.run();
 
             // Default form action
             Application.EnableVisualStyles();

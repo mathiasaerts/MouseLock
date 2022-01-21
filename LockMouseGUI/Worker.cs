@@ -12,40 +12,24 @@ using System.Windows.Forms;
 using System.IO;
 using Shell32;
 
+using Microsoft.Win32;
+using System.Windows.Automation;
 
-namespace LockMouseGUI
+namespace MouseLock
 {
     class Worker
     {
         private static readonly string fileLocation = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\MouseLock\\";
         private static readonly string filePath = fileLocation + "programs.txt";
 
+        private static bool alwaysLock = false;
         private static string lastProcess = "";
         private static string currentProcess = "";
         private static List<string> processList;
 
-        private static bool allowRun = false;
-        private static bool alwaysLock = false;
-
-        [DllImport("user32.dll")]
-        public static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out uint ProcessId);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-
-        /* Add console for debugging
-        [DllImport("kernel32.dll")]
-        static extern bool AttachConsole(int dwProcessId);
-        private const int ATTACH_PARENT_PROCESS = -1;
-         * */
-
         public Worker()
         {
-            /*
-            // Redirect console output to parent process
-            AttachConsole(ATTACH_PARENT_PROCESS);
-             * */
-
+            // Initialize processlist
             processList = new List<string>();
 
             // Check if file exists
@@ -63,10 +47,11 @@ namespace LockMouseGUI
                 catch
                 {
                     MessageBox.Show(
-                    "Mouse Lock was unable to write the program list. Please make sure the " + filePath + " file is not read-only. The program will now exit.",
-                    "Unable to write to file",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Stop);
+                        "Mouse Lock was unable to write the program list. Please make sure the " + filePath + " file is not read-only. The program will now exit.",
+                        "Unable to write to file",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Stop
+                    );
                 }
             }
 
@@ -75,12 +60,17 @@ namespace LockMouseGUI
 
             // Add each line to the list
             foreach (string line in lines)
-            {
-                processList.Add(line);
-            }
+                addProcess(line, false);
 
-            // Allow running worker
-            allowRun = true;
+            // Update file once after all processes have been added
+            updateFile();
+
+            // Listen to events
+            SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+            Automation.AddAutomationFocusChangedEventHandler(OnFocusChangedHandler);
+
+            // Update lock
+            updateLock();
         }
 
         #region Getters, setters and other methods for processList
@@ -95,24 +85,32 @@ namespace LockMouseGUI
             processList = newList;
         }
 
-        public static void addProcess(string newProcess)
+        public static void addProcess(string newProcess, bool doFileUpdate = true)
         {
             // If shortcut, get target exe
             if (newProcess.EndsWith(".lnk"))
+            {
                 newProcess = Worker.GetShortcutTargetFile(newProcess);
+                if (String.IsNullOrEmpty(newProcess))
+                    return;
+            }
             // Add if ends with .exe
             if (newProcess.EndsWith(".exe"))
             {
-                if (inList(newProcess, processList))
+                if (Util.inList(newProcess, processList))
                 {
                     MessageBox.Show(
-                    "The selected executable is already on the list.",
-                    "Already in list",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                        "The selected executable is already on the list:\n" + 
+                        newProcess.Truncate(50),
+                        "Duplicate executable selected",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
                 }
                 else
+                {
                     processList.Add(newProcess);
+                }
             }
             else
             {
@@ -120,9 +118,12 @@ namespace LockMouseGUI
                     "Only executables can be added to the list.",
                     "Invalid executable",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    MessageBoxIcon.Information
+                );
             }
-            updateFile();
+
+            if (doFileUpdate) 
+                updateFile();
         }
 
         public static void delProcess(string procName)
@@ -137,24 +138,11 @@ namespace LockMouseGUI
             updateFile();
         }
 
-        public static void enableAlwaysLock()
+        public static void setAlwaysLock(bool value)
         {
             // Enable always lock
-            alwaysLock = true;
-            // Reset last process to force update on lock
-            lastProcess = "";
-        }
-
-        public static void disableAlwaysLock()
-        {
-            // Disable always lock
-            alwaysLock = false;
-
-            // Disable current lock
-            Cursor.Clip = Rectangle.Empty;
-
-            // Reset last process to force update on lock
-            lastProcess = "";
+            alwaysLock = value;
+            updateLock();
         }
 
         public static void updateFile()
@@ -169,7 +157,8 @@ namespace LockMouseGUI
                     "Mouse Lock was unable to write the program list. Please make sure the " + filePath + " file is not read-only.",
                     "Unable to write to file",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    MessageBoxIcon.Exclamation
+                );
             }
         }
 
@@ -188,84 +177,79 @@ namespace LockMouseGUI
 
             if (folderItem != null)
             {
-                // Get shortcut target
-                ShellLinkObject link = (ShellLinkObject) folderItem.GetLink;
-                return link.Path;
+                try
+                {
+                    // Get shortcut target
+                    var link = (ShellLinkObject)folderItem.GetLink;
+                    if(link != null)
+                        return link.Path;
+                }
+                catch
+                {
+                    MessageBox.Show("Failed to get target file for this shortcut. " +
+                        "This may be due to a permission error. " +
+                        "Make sure the current user can access the shortcut location." +
+                        "\n\n" +
+                        "This occurs for shortcuts on the Windows Public Desktop, " +
+                        "try adding the executable directly instead.",
+                        "Unable to get shortcut target",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+                
             }
 
             // Not found, return empty string
             return "";
         }
 
-        public static bool inList(string checkString, List<string> list)
+        public static void updateLock()
         {
-            // To lowercase
-            checkString = checkString.ToLower();
-            foreach (string item in list)
+
+            Rectangle bounds = Rectangle.Empty;
+            if (alwaysLock || Util.inList(currentProcess, processList))
             {
-                if (checkString.Equals(item.ToLower()))
-                    return true;
+                bounds = Screen.PrimaryScreen.Bounds;
             }
-            return false;
+            //Console.WriteLine("Updating lock: {0}, {1} - Bounds: {2}", alwaysLock, currentProcess, bounds);
+
+            Cursor.Clip = bounds;
         }
 
-        public static string GetActiveProcessFileName()
+        private static void SystemEvents_DisplaySettingsChanged(object sender, EventArgs e)
         {
+            //Console.WriteLine("Resolution Changed!");
+            updateLock();
+        }
+
+        private static void OnFocusChangedHandler(object src, AutomationFocusChangedEventArgs args)
+        {
+            // Reset current process
+            currentProcess = "";
+
+            //Console.WriteLine("Focus changed! ");
+            AutomationElement element = src as AutomationElement;
+
             try
             {
-                uint pid;
-                string retVal;
-
-                // Get foreground window handle
-                IntPtr hwnd = GetForegroundWindow();
-                // Get Process ID
-                GetWindowThreadProcessId(hwnd, out pid);
-
-                // Get process from PID
-                Process p = Process.GetProcessById((int) pid);
-                retVal = p.MainModule.FileName;
-                p.Close();
-                return retVal;
-            }
-            catch
-            {
-                return "Error/x64";
-            }
-        }
-
-        public void run()
-        {
-            ThreadStart updateCurrentProcess = delegate
-            {
-                while (allowRun)
+                if (element != null)
                 {
-                    // Get active process
-                    currentProcess = GetActiveProcessFileName();
-
-                    // Debug output
-                    //Console.WriteLine(currentProcess);
-
-                    // If current process changed and is in our list
-                    if (alwaysLock || (!currentProcess.Equals(lastProcess) && inList(currentProcess, processList)))
+                    string name = element.Current.Name;
+                    string id = element.Current.AutomationId;
+                    int processId = element.Current.ProcessId;
+                    using (Process process = Process.GetProcessById(processId))
                     {
-                        // Get screen resolution and set size
-                        Cursor.Clip = Screen.PrimaryScreen.Bounds;
+                        currentProcess = process.MainModule.FileName;
+                        //Console.WriteLine("Name: {0}, Id: {1}, Process: {2}", name, id, currentProcess);
                     }
-                    // Update last process
-                    lastProcess = currentProcess;
-
-                    Thread.Sleep(500);
                 }
-
-            };
-            Thread t1 = new Thread(updateCurrentProcess);
-            t1.IsBackground = true;
-            t1.Start();
-        }
-
-        public static void stop()
-        {
-            allowRun = false;
+            }
+            finally
+            {
+                // Update lock, just to be sure ;)
+                updateLock();
+            }
         }
     }
 }

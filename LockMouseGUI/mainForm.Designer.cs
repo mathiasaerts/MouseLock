@@ -1,5 +1,5 @@
 ﻿using System.Windows.Forms;
-namespace LockMouseGUI
+namespace MouseLock
 {
     partial class UI
     {
@@ -62,8 +62,8 @@ namespace LockMouseGUI
             // 
             // notifyIcon
             // 
-            this.notifyIcon.BalloonTipText = "MouseLock is now minimized.";
-            this.notifyIcon.BalloonTipTitle = "MouseLock";
+            this.notifyIcon.BalloonTipText = "MouseLock is now minimized and running in the background.";
+            this.notifyIcon.BalloonTipTitle = "MouseLock is still active";
             this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
             this.notifyIcon.Text = "MouseLock";
             this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon_MouseDoubleClick);
@@ -126,7 +126,7 @@ namespace LockMouseGUI
         }
 
         #endregion
-        
+
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button addProgramButton;
         private System.Windows.Forms.NotifyIcon notifyIcon;
