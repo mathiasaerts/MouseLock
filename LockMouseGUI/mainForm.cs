@@ -108,7 +108,6 @@ namespace MouseLock
                 if (res == DialogResult.No)
                 {
                     e.Cancel = true;
-                    return;
                 }
             }
         }
